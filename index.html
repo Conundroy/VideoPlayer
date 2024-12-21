@@ -12,19 +12,7 @@
 
     <script>
         var renderObject = {
-            EDL: [{
-                url: "video3.mp4",
-                startTime: 1.0,
-                endTime: 4.0,
-            }, {
-                url: "video2.mp4",
-                startTime: 26.5,
-                endTime: 34.0,
-            }, {
-                url: "video1.mp4",
-                startTime: 3,
-                endTime: 10.5,
-            }],
+            EDL: [],
         };
 
         var player;
@@ -35,11 +23,65 @@
         var sliderPosition;
         var sliderCompleted;
 
-        window.onload = function(){
+        function initialize() {
+			const files = Array.from(document.getElementById('folder').files);
+
+			// Filter video files
+			const videos = files.filter(file => /\.(mp4)$/i.test(file.name));
+
+			// Append video files to the EDL
+			videos.forEach(file => {
+				renderObject.EDL.push({
+					url: URL.createObjectURL(file)
+				});
+			});
 
             progressSlider = document.getElementById('progressSlider');
             sliderPosition = document.getElementById('sliderPosition');
             sliderCompleted = document.getElementById('sliderCompleted')
+            
+            var isDragging = false;
+
+			// Start dragging on pointerdown (works for mouse, touch, and stylus)
+			sliderPosition.addEventListener('pointerdown', function(event) {
+				isDragging = true;
+
+				// Prevent default to avoid unwanted scrolling or selection
+				event.preventDefault();
+
+				// Listen for pointer moves and releases
+				document.addEventListener('pointermove', onSliderDrag);
+				document.addEventListener('pointerup', onSliderDragEnd);
+				document.addEventListener('pointercancel', onSliderDragEnd);
+			});
+			
+			// Slider drag handler
+			function onSliderDrag(event) {
+				if (isDragging) {
+					// Pointer event gives us the clientX directly
+					var offsetX = event.clientX - progressSlider.getBoundingClientRect().left;
+					var newPosition = Math.max(0, Math.min(offsetX, progressSlider.clientWidth - sliderPosition.clientWidth));
+
+					// Update the slider position
+					sliderPosition.style.left = newPosition + 'px';
+
+					// Calculate the new time based on the slider's position
+					var newTime = (newPosition / (progressSlider.clientWidth - sliderPosition.clientWidth)) * player.duration();
+					var newClipIndex = player.getClipIndexFromCurrentTime(newTime);
+					if (player.returnClipIndex != newClipIndex) player.seekToClipIndex(newClipIndex);
+					player.seekToSeconds(newTime);
+				}
+			}
+
+			// When dragging ends
+			function onSliderDragEnd() {
+				isDragging = false;
+
+				// Remove the event listeners when dragging ends
+				document.removeEventListener('pointermove', onSliderDrag);
+				document.removeEventListener('pointerup', onSliderDragEnd);
+				document.removeEventListener('pointercancel', onSliderDragEnd);
+			}
 
             function loadingErrorHandler(errorMessage) {
                 console.error(errorMessage);
@@ -89,16 +131,16 @@
                 }
             }
 
-
             player = new VideoPlayer("VideoPlayerContainer", renderObject, {
                 "classString" : "VideoPlayer",
-                "transitionTime" : .1,
+                "transitionTime" : 0,
                 "loadingErrorHandler" : loadingErrorHandler,
                 "loadingStartedHandler" : loadingStartedHandler,
                 "loadingStoppedHandler" : loadingStoppedHandler,
                 "playHandler" : playHandler,
                 "pauseHandler" : pauseHandler,
                 "timeUpdateHandler" : timeUpdateHandler,
+                "autoLoadDuration" : true
             });
 
             // create the buttons for seeking to a specific clip
@@ -114,9 +156,19 @@
                 clipElement.addEventListener('click', clipClicked);
             }
         };
+        
+        window.onload = function(){
+			if (document.getElementById('folder').value != "" && renderObject.EDL.length == 0) initialize();
+		}
 
         function playPauseClicked() {
-            player.togglePlayPause();
+			if (document.getElementById('folder').value == "") {
+				document.getElementById('folder').click();
+				return;
+			}
+			if (renderObject.EDL.length == 0) initialize();
+			if (player.duration() == null) player.loadDuration();
+			else player.togglePlayPause();
         }
 
         function clipClicked() {
@@ -128,7 +180,7 @@
     <style>
         /* Video Player */
         html {
-            width: 100%; height: 100%;
+            width: 100%; height: 100%; overflow: hidden;
         }
         body {
             margin: 0; width: 100%; height: 100%;
@@ -226,7 +278,7 @@
     </style>
 </head>
 <body>
-
+	<input type="file" id="folder" webkitdirectory directory multiple style="display: none"/>
     <!-- Placeholder for video player -->
     <div id="VideoPlayerContainer"></div>
 

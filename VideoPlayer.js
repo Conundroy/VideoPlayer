@@ -113,7 +113,7 @@ function VideoPlayer(videoContainerID, renderObject, options) {
     this.loadDuration = function () {
         for (var i = 0; i < self.renderObject.EDL.length; i++) {
             if (!self.renderObject.EDL[i].endTime) {
-                self.durationLoadingVideo = createVideo(i, "metadata");
+                self.durationLoadingVideo = self.createVideo(i, "metadata");
                 return; // return so that we don't call onDurationLoaded
             }
         }
@@ -150,6 +150,31 @@ function VideoPlayer(videoContainerID, renderObject, options) {
     this.returnClipIndex = function() {
         return self.currentClipIndex;
     }
+    
+    this.getClipIndexFromCurrentTime = function (currentTime) {
+		if (currentTime < 0) {
+			console.error("Current time cannot be negative.");
+			return null;
+		}
+
+		var cumulativeTime = 0;
+
+		for (var i = 0; i < self.renderObject.EDL.length; i++) {
+			var clip = self.renderObject.EDL[i];
+			var startTime = clip.startTime || 0;
+			var clipLength = clip.endTime ? clip.endTime - startTime : self.duration() - startTime;
+
+			if (currentTime < cumulativeTime + clipLength) {
+				return i; // Found the clip index
+			}
+
+			cumulativeTime += clipLength;
+		}
+
+		console.error("Could not determine clip index for current time: " + currentTime);
+		return null;
+	};
+
 
     this.seekToClipIndex = function(clipIndex) {
         // check to see if the seek request is valid or no
@@ -177,7 +202,7 @@ function VideoPlayer(videoContainerID, renderObject, options) {
 
             // dispose of video elements that came before the desired clipIndex
             for (var i = 0; i < self.renderObject.EDL.length; i++) {
-                if(i < clipIndex || (self.videoObjects[i] && self.videoObjects[i].readyState < 4)) {
+                if(i != clipIndex || (self.videoObjects[i] && self.videoObjects[i].readyState < 4)) {
                     self.videoObjects[i] = null;
                 }
             }
@@ -419,7 +444,7 @@ function VideoPlayer(videoContainerID, renderObject, options) {
                 {
                     if (!self.renderObject.EDL[i].endTime)
                     {
-                        self.durationLoadingVideo = createVideo(i, "metadata");
+                        self.durationLoadingVideo = self.createVideo(i, "metadata");
                         return; // return so that we don't call onDurationLoaded
                     }
 
