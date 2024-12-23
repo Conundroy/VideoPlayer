@@ -130,6 +130,8 @@
 				else {
 					sliderCompleted.style.width = (percent * (progressSlider.clientWidth - sliderPosition.clientWidth) + (sliderPosition.clientWidth / 2.0)) + 'px';
 				}
+
+				if (!player.isPlaying) clipStartHandler();
 			}
 
 			function clipStartHandler() {
