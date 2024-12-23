@@ -23,6 +23,7 @@
 			const videos = Array.from(document.getElementById('folder').files);
 			if (videos.length == 0) {
 				document.getElementById('toast').textContent = "No video found that matches format: .mp4";
+				document.getElementById('folder').remove();
 				return;
 			}
 
