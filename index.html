@@ -19,6 +19,8 @@
 		var sliderPosition;
 		var sliderCompleted;
 
+		const query = new URLSearchParams(window.location.search);
+
 		function initialize() {
 			const videos = Array.from(document.getElementById('folder').files);
 			if (videos.length == 0) {
@@ -89,12 +91,14 @@
 				var loadingContainer = document.getElementById('loadingContainer');
 
 				loadingContainer.style.visibility = 'visible';
+				if (query.get('verbose')) document.getElementById('toast').textContent = 'Loading... If this takes too long, the video might have failed to load due to corruption or large file size.';
 			}
 
 			function loadingStoppedHandler() {
 				var loadingContainer = document.getElementById('loadingContainer');
 
 				loadingContainer.style.visibility = 'hidden';
+				document.getElementById('toast').textContent = '';
 			}
 
 			function playHandler() {
@@ -155,9 +159,9 @@
 			window.addEventListener('resize', timeUpdateHandler, true);
 		};
 
-		//window.onload = function(){
-			//document.getElementById('folder').addEventListener("change", initialize);
-		//}
+		window.onload = function(){
+			document.getElementById('loadingContainer').style.visibility = 'hidden';
+		}
 
 		function playPauseClicked() {
 			if (renderObject.EDL.length == 0) {
