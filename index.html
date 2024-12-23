@@ -42,12 +42,27 @@
 			
 			var isDragging = false;
 
-			// Start dragging on pointerdown (works for mouse, touch, and stylus)
 			sliderPosition.addEventListener('pointerdown', sliderEvents);
-			document.getElementById('VideoPlayerContainer').addEventListener('pointerdown', sliderEvents);
+			progressSlider.addEventListener('pointerdown', sliderEvents);
+
+			function moveSlider(event)
+			{
+				// Pointer event gives us the clientX directly
+				var offsetX = event.clientX - progressSlider.getBoundingClientRect().left;
+				var newPosition = Math.max(0, Math.min(offsetX, progressSlider.clientWidth - sliderPosition.clientWidth));
+
+				// Update the slider position
+				sliderPosition.style.left = newPosition + 'px';
+
+				// Calculate the new time based on the slider's position
+				var newTime = (newPosition / (progressSlider.clientWidth - sliderPosition.clientWidth)) * player.duration();
+				var newClipIndex = player.getClipIndexFromCurrentTime(newTime);
+				if (player.returnClipIndex() != newClipIndex) player.seekToClipIndex(newClipIndex);
+				player.seekToSeconds(newTime);
+			}
 
 			function sliderEvents(event) {
-
+				moveSlider(event);
 				// Prevent default to avoid unwanted scrolling or selection
 				event.preventDefault();
 
@@ -59,20 +74,8 @@
 
 			// Slider drag handler
 			function onSliderDrag(event) {
-				if (isDragging) {
-					// Pointer event gives us the clientX directly
-					var offsetX = event.clientX - progressSlider.getBoundingClientRect().left;
-					var newPosition = Math.max(0, Math.min(offsetX, progressSlider.clientWidth - sliderPosition.clientWidth));
-
-					// Update the slider position
-					sliderPosition.style.left = newPosition + 'px';
-
-					// Calculate the new time based on the slider's position
-					var newTime = (newPosition / (progressSlider.clientWidth - sliderPosition.clientWidth)) * player.duration();
-					var newClipIndex = player.getClipIndexFromCurrentTime(newTime);
-					if (player.returnClipIndex() != newClipIndex) player.seekToClipIndex(newClipIndex);
-					player.seekToSeconds(newTime);
-				} else isDragging = true;
+				if (isDragging) moveSlider(event);
+				else isDragging = true;
 			}
 
 			// When dragging ends
