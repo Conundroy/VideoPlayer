@@ -169,6 +169,7 @@
 				folder.style.display = 'none';
 				document.body.appendChild(folder);
 				folder.addEventListener("change", initialize);
+				folder.addEventListener("cancel", folder.remove);
 				folder.click();
 				return;
 			}
