@@ -21,8 +21,6 @@
 
 		const query = new URLSearchParams(window.location.search);
 
-		var lastClipIndex;
-
 		function initialize() {
 			const videos = Array.from(document.getElementById('folder').files);
 			if (videos.length == 0) {
@@ -45,8 +43,10 @@
 			var isDragging = false;
 
 			// Start dragging on pointerdown (works for mouse, touch, and stylus)
-			sliderPosition.addEventListener('pointerdown', function(event) {
-				isDragging = true;
+			sliderPosition.addEventListener('pointerdown', sliderEvents);
+			document.getElementById('VideoPlayerContainer').addEventListener('pointerdown', sliderEvents);
+
+			function sliderEvents(event) {
 
 				// Prevent default to avoid unwanted scrolling or selection
 				event.preventDefault();
@@ -55,7 +55,7 @@
 				document.addEventListener('pointermove', onSliderDrag);
 				document.addEventListener('pointerup', onSliderDragEnd);
 				document.addEventListener('pointercancel', onSliderDragEnd);
-			});
+			};
 
 			// Slider drag handler
 			function onSliderDrag(event) {
@@ -72,7 +72,7 @@
 					var newClipIndex = player.getClipIndexFromCurrentTime(newTime);
 					if (player.returnClipIndex() != newClipIndex) player.seekToClipIndex(newClipIndex);
 					player.seekToSeconds(newTime);
-				}
+				} else isDragging = true;
 			}
 
 			// When dragging ends
@@ -134,6 +134,7 @@
 				if (!player.isPlaying) clipStartHandler();
 			}
 
+			var lastClipIndex;
 			function clipStartHandler() {
 				if (player.returnClipIndex() != lastClipIndex) {
 					if (lastClipIndex != null) document.getElementById('clipContainer').children[lastClipIndex].style.color = 'black';
@@ -171,10 +172,16 @@
 
 			document.getElementById('folder').remove();
 			window.addEventListener('resize', timeUpdateHandler, true);
+
+			document.getElementById('VideoPlayerContainer').removeEventListener('pointerup', playPauseClicked);
+			document.getElementById('VideoPlayerContainer').addEventListener('pointerup', function(event) {
+				if (!isDragging) playPauseClicked();
+			});
 		};
 
 		window.onload = function(){
 			document.getElementById('loadingContainer').style.visibility = 'hidden';
+			document.getElementById('VideoPlayerContainer').addEventListener('pointerup', playPauseClicked);
 		}
 
 		function playPauseClicked() {
@@ -289,7 +296,7 @@
 </head>
 <body>
 	<!-- Placeholder for video player -->
-	<div id="VideoPlayerContainer" onclick=playPauseClicked()></div>
+	<div id="VideoPlayerContainer"></div>
 
 	<div id="loadingContainer">
 		<div id="toast"></div>
