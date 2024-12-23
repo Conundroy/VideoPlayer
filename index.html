@@ -91,7 +91,7 @@
 				var loadingContainer = document.getElementById('loadingContainer');
 
 				loadingContainer.style.visibility = 'visible';
-				if (query.get('verbose')) document.getElementById('toast').textContent = 'Loading... If this takes too long, the video might have failed to load due to corruption or large file size.';
+				if (query.has('verbose')) document.getElementById('toast').textContent = 'Loading... If this takes too long, the video might have failed to load due to corruption or large file size.';
 			}
 
 			function loadingStoppedHandler() {
