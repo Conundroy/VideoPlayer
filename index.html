@@ -21,6 +21,8 @@
 
 		const query = new URLSearchParams(window.location.search);
 
+		var lastClipIndex;
+
 		function initialize() {
 			const videos = Array.from(document.getElementById('folder').files);
 			if (videos.length == 0) {
@@ -68,7 +70,7 @@
 					// Calculate the new time based on the slider's position
 					var newTime = (newPosition / (progressSlider.clientWidth - sliderPosition.clientWidth)) * player.duration();
 					var newClipIndex = player.getClipIndexFromCurrentTime(newTime);
-					if (player.returnClipIndex != newClipIndex) player.seekToClipIndex(newClipIndex);
+					if (player.returnClipIndex() != newClipIndex) player.seekToClipIndex(newClipIndex);
 					player.seekToSeconds(newTime);
 				}
 			}
@@ -130,6 +132,15 @@
 				}
 			}
 
+			function clipStartHandler() {
+				if (player.returnClipIndex() != lastClipIndex) {
+					if (lastClipIndex != null) document.getElementById('clipContainer').children[lastClipIndex].style.color = 'black';
+					lastClipIndex = player.returnClipIndex();
+				}
+
+				document.getElementById('clipContainer').children[player.returnClipIndex()].style.color = 'white';
+			}
+
 			player = new VideoPlayer("VideoPlayerContainer", renderObject, {
 				"classString" : "VideoPlayer",
 				"transitionTime" : 0,
@@ -139,6 +150,7 @@
 				"playHandler" : playHandler,
 				"pauseHandler" : pauseHandler,
 				"timeUpdateHandler" : timeUpdateHandler,
+				"clipStartHandler" : clipStartHandler,
 				"autoLoadDuration" : true
 			});
 
